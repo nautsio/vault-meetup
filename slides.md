@@ -78,9 +78,8 @@ A secret backend is responsible for managing secrets. Simple secret backends lik
 Auth backends are the components in Vault that perform authentication and are responsible for assigning identity and a set of policies to a user.
 
 !SUB
-# Auth Backend
-- File
-- Syslog
+# Audit Backend
+Audit backends are the components in Vault that keep a detailed log of all requests and response to Vault. 
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
