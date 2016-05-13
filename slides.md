@@ -7,17 +7,17 @@
     <td>**Armin Coralic**</td><td>*[acoralic@xebia.com](mailto:acoralic@xebia.com)*</td>
   </tr>
   <tr>
-    <td>**Mark van Holsteijn**</td><td>*[mvanholsteijn@xebia.com](mailto:mvanholsteijn@xebia.com)*</td>
+    <td>**Ivo Verberk**</td><td>*[iverberk@xebia.com](mailto:iverberk@xebia.com)*</td>
   </tr>
   <tr>
-    <td>**Erik Veld**</td><td>*[eveld@xebia.com](mailto:eveld@xebia.com)*</td>
+    <td>**Werner Buck**</td><td>*[wbuck@xebia.com](mailto:wbuck@xebia.com)*</td>
   </tr>
   <tr><td>&nbsp;</td></tr>
   <tr>
-    <td>**Slides**</td><td>[http://nauts.io/nomad-meetup](http://nauts.io/nomad-meetup)</td>
+    <td>**Slides**</td><td>[http://nauts.io/vault-meetup](http://nauts.io/vault-meetup)</td>
   </tr>
   <tr>
-    <td>**Files**</td><td>[http://github.com/nautsio/nomad-meetup](http://github.com/nautsio/nomad-meetup)</td>
+    <td>**Files**</td><td>[http://github.com/nautsio/vault-meetup](http://github.com/nautsio/vault-meetup)</td>
   </tr>
 </table>
 </center>
