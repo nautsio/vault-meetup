@@ -75,13 +75,7 @@ A secret backend is responsible for managing secrets. Simple secret backends lik
 
 !SUB
 # Auth Backend
-- App ID
-- GitHub
-- LDAP
-- MFA
-- TLS Certificates
-- Tokens
-- Usernam & Password
+Auth backends are the components in Vault that perform authentication and are responsible for assigning identity and a set of policies to a user.
 
 !SUB
 # Auth Backend
