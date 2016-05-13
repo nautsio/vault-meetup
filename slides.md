@@ -24,10 +24,10 @@
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-<center>![Nomad](img/vault-logo.png)</center>
+<center>![Vault](img/vault-logo.png)</center>
 
 !SLIDE
-Nomad is a tool for **managing a cluster of machines and running applications on them**. Nomad **abstracts away machines** and the location of applications, and instead **enables users to declare what they want to run** and Nomad handles where they should run and how to run them.
+Vault is a tool for **securely** accessing secrets. A **secret** is anything that you want to tightly control access to, such as API keys, passwords, certificates, and more. Vault provides a **unified interface** to any secret, while providing **tight access control** and recording a detailed **audit log**.
 
 !SUB
 # Architecture
