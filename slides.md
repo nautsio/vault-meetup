@@ -24,52 +24,77 @@
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-<center>![Nomad](img/vault-logo.png)</center>
+<center>![Vault](img/vault-logo.png)</center>
 
 !SLIDE
-Nomad is a tool for **managing a cluster of machines and running applications on them**. Nomad **abstracts away machines** and the location of applications, and instead **enables users to declare what they want to run** and Nomad handles where they should run and how to run them.
+# Vault
+Vault is a tool for **securely** accessing secrets. A **secret** is anything that you want to tightly control access to, such as API keys, passwords, certificates, and more. Vault provides a **unified interface** to any secret, while providing **tight access control** and recording a detailed **audit log**.
+
+!SUB
+# Without Vault
+- More and more secrets
+- Secrets all over the place
+- No insight who uses which secret
+- No procedure in case something bad happens
+
+!SUB
+# With Vault
+- Centralized source for secrets
+- Unified access interface
+- Pluggable backends 
 
 !SUB
 # Architecture
-![Architecture](img/architecture.png)
+![Architecture](img/vault-architecture.png)
 
 !SUB
-# Phase 1: Evaluation
-![Evaluation](img/evaluation.png)
+# (Un)sealing the Vault
+![Architecture](img/keys.png)
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Backends
 
 !SUB
-# Phase 2: Planning
-![Planning](img/planning.png)
+# Storage Backend
+- consul
+- etcd
+- zookeeper
+- dynamodb
+- s3
+- mysql
+- postgresql
+- inmem
+- file
 
 !SUB
-# Phase 3: Allocation
-![Allocation](img/allocation.png)
+# Secret Backend
+- AWS
+- Cassandra
+- Consul
+- Cubbyhole
+- Generic
+- MSSQL
+- MySQL
+- PKI (Certificates)
+- PostgreSQL
+- SSH
+- Transit
 
 !SUB
-- **Job, Task & Taskgroup**: A Job is a specification of tasks that Nomad should run. It consists of Taskgroups, which themselves contain one ore more Tasks.
-- **Allocation**: An Allocation is a placement of a Task on a node.
-- **Evaluation**: Evaluations are the mechanism by which Nomad makes scheduling decisions.
-- **Node, Agent, Server & Client**: A Client of Nomad and a Node are a machine that tasks can be run on. Nomad servers are the brains of the cluster. An Agent can be run in either Client or Server mode.
-- **Task Driver**: A Driver represents the basic means of executing your Tasks.
+# Auth Backend
+- App ID
+- GitHub
+- LDAP
+- MFA
+- TLS Certificates
+- Tokens
+- Usernam & Password
 
 !SUB
-# Job types
-- **Service**: The service scheduler is designed for scheduling long lived services that should never go down.
-- **Batch**: Batch jobs are much less sensitive to short term performance fluctuations and are short lived, finishing in a few minutes to a few days. They can be scheduled and recurring.
-- **System**: The system scheduler is used to register jobs that should be run on all clients that meet the job's constraints.
-
-doc: [/docs/jobspec/schedulers.html](https://www.nomadproject.io/docs/jobspec/schedulers.html)
-
-!SUB
-# Task drivers
-- **Docker**: Run a Docker container
-- **Rkt**: Run a Rkt container
-- **Exec**: Execute a command for a task using the underlying isolation primitives of the operating system to limit the tasks access to resources
-- **Rawexec**: Execute a command for a task without any isolation
-- **Java**: Run a downloaded Java jar file
-- **Qemu**: Start a Virtual Machine
-
-doc: [/docs/drivers/index.html](https://www.nomadproject.io/docs/drivers/index.html)
+# Auth Backend
+- File
+- Syslog
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
