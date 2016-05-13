@@ -75,28 +75,63 @@ doc: [/docs/drivers/index.html](https://www.nomadproject.io/docs/drivers/index.h
 <!-- .slide: data-background="#6C1D5F" -->
 # The Setup
 
-!SLIDE
-<!-- .slide: data-background="#6C1D5F" -->
-# Jobs
+Download from
 
 !SUB
-# Creating
-Nomad can initialize an example job for us which we can then modify to our own requirements:
+# Start vault server
+
+Start in dev mode (always unsealed)
+```
+$ vault server -dev &> vault.log &
+==> WARNING: Dev mode is enabled!
+...
+```
+Configure client
+```
+$ export VAULT_ADDR='http://127.0.0.1:8200'
+$ vault status
+Sealed: false
+Key Shares: 1
+Key Threshold: 1
+Unseal Progress: 0
+
+High-Availability Enabled: false
+```
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Secrets
+
+!SUB
+# Hello world secret
 
 ```
-$ nomad init
-Example job file written to example.nomad
+$ vault write secret/hello value=world
+Success! Data written to: secret/hello
+```
 
-$ cat example.nomad
-# There can only be a single job definition per file.
-# Create a job with ID and Name 'example'
-job "example" {
-    # Run the job in the global region, which is the default.
-    # region = "global"
+!SUB
+# Alternate syntax
+
+There are multiple ways to write data, including stdin and from file.
+
+From stdin
+```
+$ echo -n "bar" | vault write secret/foo value=-
+Success! Data written to: secret/hello
+```
+
+From file
+
+```
+$ cat << EOF > data.json
+{ "value": "itsasecret" }
+EOF
+$ vault write secret/password @data.json
 ...
 ```
 
-doc: [/docs/jobspec/index.html](https://www.nomadproject.io/docs/jobspec/index.html)
+read write syntax doc: [/docs/commands/read-write.html](https://www.vaultproject.io/docs/commands/read-write.html)
 
 !SUB
 ```
@@ -337,14 +372,14 @@ For example the default a job may specify (within the "task" section):
 
 ```
 resources {
-	cpu = 500 # 500 Mhz
-	memory = 256 # 256MB
-	network {
-		mbits = 10
-		port "db" {
+  cpu = 500 # 500 Mhz
+  memory = 256 # 256MB
+  network {
+    mbits = 10
+    port "db" {
       static = 3306
-		}
-	}
+    }
+  }
 }
 ```
 
@@ -415,14 +450,14 @@ curl -s -X POST $NOMAD_ADDR/v1/node/$NODE_ID/drain?enable=true > /dev/null
 
 echo wait for drain of all allocations
 for t in {0..59} ; do
-	ALLOCS=$(curl -s $NOMAD_ADDR/v1/node/$NODE_ID/allocations \
+  ALLOCS=$(curl -s $NOMAD_ADDR/v1/node/$NODE_ID/allocations \
     | jq '[.[] | select(.ClientStatus == "running")] | length')
-	echo remaining allocs is $ALLOCS
-	if [ "0" == "$ALLOCS" ] ; then
-		echo node drain completed
-		exit 0
-	fi
-	sleep 1
+  echo remaining allocs is $ALLOCS
+  if [ "0" == "$ALLOCS" ] ; then
+    echo node drain completed
+    exit 0
+  fi
+  sleep 1
 done
 ```
 
