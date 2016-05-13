@@ -71,17 +71,7 @@ A storage backend is responsible for durable storage of encrypted data. Backends
 
 !SUB
 # Secret Backend
-- AWS
-- Cassandra
-- Consul
-- Cubbyhole
-- Generic
-- MSSQL
-- MySQL
-- PKI (Certificates)
-- PostgreSQL
-- SSH
-- Transit
+A secret backend is responsible for managing secrets. Simple secret backends like the "generic" backend simply return the same secret when queried. Some backends support using policies to dynamically generate a secret each time they are queried.
 
 !SUB
 # Auth Backend
