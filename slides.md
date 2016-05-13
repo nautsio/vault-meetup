@@ -51,24 +51,50 @@ Vault is a tool for **securely** accessing secrets. A **secret** is anything tha
 # (Un)sealing the Vault
 ![Architecture](img/keys.png)
 
-!SUB
-# Job types
-- **Service**: The service scheduler is designed for scheduling long lived services that should never go down.
-- **Batch**: Batch jobs are much less sensitive to short term performance fluctuations and are short lived, finishing in a few minutes to a few days. They can be scheduled and recurring.
-- **System**: The system scheduler is used to register jobs that should be run on all clients that meet the job's constraints.
-
-doc: [/docs/jobspec/schedulers.html](https://www.nomadproject.io/docs/jobspec/schedulers.html)
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Backends
 
 !SUB
-# Task drivers
-- **Docker**: Run a Docker container
-- **Rkt**: Run a Rkt container
-- **Exec**: Execute a command for a task using the underlying isolation primitives of the operating system to limit the tasks access to resources
-- **Rawexec**: Execute a command for a task without any isolation
-- **Java**: Run a downloaded Java jar file
-- **Qemu**: Start a Virtual Machine
+# Storage Backend
+- consul
+- etcd
+- zookeeper
+- dynamodb
+- s3
+- mysql
+- postgresql
+- inmem
+- file
 
-doc: [/docs/drivers/index.html](https://www.nomadproject.io/docs/drivers/index.html)
+!SUB
+# Secret Backend
+- AWS
+- Cassandra
+- Consul
+- Cubbyhole
+- Generic
+- MSSQL
+- MySQL
+- PKI (Certificates)
+- PostgreSQL
+- SSH
+- Transit
+
+!SUB
+# Auth Backend
+- App ID
+- GitHub
+- LDAP
+- MFA
+- TLS Certificates
+- Tokens
+- Usernam & Password
+
+!SUB
+# Auth Backend
+- File
+- Syslog
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
