@@ -57,44 +57,19 @@ Vault is a tool for **securely** accessing secrets. A **secret** is anything tha
 
 !SUB
 # Storage Backend
-- consul
-- etcd
-- zookeeper
-- dynamodb
-- s3
-- mysql
-- postgresql
-- inmem
-- file
+A storage backend is responsible for durable storage of encrypted data. Backends are not trusted by Vault and are only expected to provide durability. The storage backend is configured when starting the Vault server.
 
 !SUB
 # Secret Backend
-- AWS
-- Cassandra
-- Consul
-- Cubbyhole
-- Generic
-- MSSQL
-- MySQL
-- PKI (Certificates)
-- PostgreSQL
-- SSH
-- Transit
+A secret backend is responsible for managing secrets. Simple secret backends like the "generic" backend simply return the same secret when queried. Some backends support using policies to dynamically generate a secret each time they are queried.
 
 !SUB
 # Auth Backend
-- App ID
-- GitHub
-- LDAP
-- MFA
-- TLS Certificates
-- Tokens
-- Usernam & Password
+Auth backends are the components in Vault that perform authentication and are responsible for assigning identity and a set of policies to a user.
 
 !SUB
-# Auth Backend
-- File
-- Syslog
+# Audit Backend
+Audit backends are the components in Vault that keep a detailed log of all requests and response to Vault. 
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
