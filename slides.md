@@ -30,27 +30,21 @@
 Vault is a tool for **securely** accessing secrets. A **secret** is anything that you want to tightly control access to, such as API keys, passwords, certificates, and more. Vault provides a **unified interface** to any secret, while providing **tight access control** and recording a detailed **audit log**.
 
 !SUB
+# Without Vault
+- More and more secrets
+- Secrets all over the place
+- No insight who uses which secret
+- No procedure in case something bad happens
+
+!SUB
+# With Vault
+- Centralized source for secrets
+- Unified access interface
+- Pluggable backends 
+
+!SUB
 # Architecture
 ![Architecture](img/vault-architecture.png)
-
-!SUB
-# Phase 1: Evaluation
-![Evaluation](img/evaluation.png)
-
-!SUB
-# Phase 2: Planning
-![Planning](img/planning.png)
-
-!SUB
-# Phase 3: Allocation
-![Allocation](img/allocation.png)
-
-!SUB
-- **Job, Task & Taskgroup**: A Job is a specification of tasks that Nomad should run. It consists of Taskgroups, which themselves contain one ore more Tasks.
-- **Allocation**: An Allocation is a placement of a Task on a node.
-- **Evaluation**: Evaluations are the mechanism by which Nomad makes scheduling decisions.
-- **Node, Agent, Server & Client**: A Client of Nomad and a Node are a machine that tasks can be run on. Nomad servers are the brains of the cluster. An Agent can be run in either Client or Server mode.
-- **Task Driver**: A Driver represents the basic means of executing your Tasks.
 
 !SUB
 # Job types
