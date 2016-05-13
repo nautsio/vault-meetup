@@ -31,7 +31,7 @@ Vault is a tool for **securely** accessing secrets. A **secret** is anything tha
 
 !SUB
 # Architecture
-![Architecture](img/architecture.png)
+![Architecture](img/vault-architecture.png)
 
 !SUB
 # Phase 1: Evaluation
