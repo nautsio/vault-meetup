@@ -24,7 +24,7 @@
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-<center>![Nomad](img/nomad-logo.png)</center>
+<center>![Nomad](img/vault-logo.png)</center>
 
 !SLIDE
 Nomad is a tool for **managing a cluster of machines and running applications on them**. Nomad **abstracts away machines** and the location of applications, and instead **enables users to declare what they want to run** and Nomad handles where they should run and how to run them.
