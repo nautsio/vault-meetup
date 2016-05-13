@@ -57,15 +57,17 @@ Vault is a tool for **securely** accessing secrets. A **secret** is anything tha
 
 !SUB
 # Storage Backend
-- consul
-- etcd
-- zookeeper
-- dynamodb
-- s3
-- mysql
-- postgresql
-- inmem
-- file
+A storage backend is responsible for durable storage of encrypted data. Backends are not trusted by Vault and are only expected to provide durability. The storage backend is configured when starting the Vault server.
+
+!SUB
+# Storage Backend options
+| storage backend | HA  | Support   |
+|:---------------:|-----|-----------|
+|      consul     | Yes | Official  |
+|       etcd      | Yes | Community |
+|       s3        | No  | Community |
+|       inmem     | No  | Official  |
+|      PostgreSQL | No  | Community |
 
 !SUB
 # Secret Backend
