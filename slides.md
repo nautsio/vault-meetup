@@ -139,10 +139,41 @@ read write syntax doc: [/docs/commands/read-write.html](https://www.vaultproject
 * token-create
 * policy maken
 
-!SUB (Ivo (?))
-# Auth
+!SUB 
+# Authentication: Username & Password
+Token authentication is great but if you want to allow users to connect without much effort then the "userpass" combination is a nice way. The "userpass" auth backend allows users to authenticate with Vault using a username and password combination.
 
-* User/pass
+To use it we need to enable it
+```
+vault auth-enable userpass
+Successfully enabled 'userpass' at 'userpass'!
+```
+
+doc: [auth/userpass.html](https://www.vaultproject.io/docs/auth/userpass.html)
+
+!SUB
+We can see which auth backends are enabled
+```
+vault auth -methods
+Path       Type      Description
+token/     token     token based credentials
+userpass/  userpass
+```
+
+Let's create a username & password to authenticate to Vault with root policies instead of using an token
+```
+vault write auth/userpass/users/meetup password=1234 policies=root
+Success! Data written to: auth/userpass/users/meetup
+```
+
+Now we can log in with that username & password
+```
+vault auth -method=userpass username=meetup password=1234
+Successfully authenticated!
+token: a6e9151d-da97-a3c9-172c-ec3e62aa2d96
+token_duration: 0
+token_policies: [root]
+```
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
