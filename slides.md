@@ -231,7 +231,51 @@ ciphertext  vault:v2:ZruZRACkqXq+DrU0LF3u67s898l1qyqYiCXP2Sj41tMyjU4KUipQextfsDO
 ```  
 
 !SUB
-# Cubbyhole backend (Armin)
+# Cubbyhole backend
+The cubbyhole secret backend is used to store arbitrary secrets within the configured physical storage for Vault.
+
+This backend differs from the generic backend in that the generic backend's values are accessible to any token with read privileges on that path. In cubbyhole, paths are scoped per token; no token can access another token's cubbyhole, whether to read, write, list, or for any other operation. When the token expires, its cubbyhole is destroyed.
+
+doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
+
+!SUB
+Passing an token to an application that can ask for database access could be sniffed, to make that more save we can store the actual token in cubbyhole and then generate a new token with limited access times that can retrieve that token. If the application can retreive the token all is fine and cubbyhole is gone, if it can't we know something happend with the token and we need to act.
+
+Let's create a token with limited use
+```
+vault token-create -use-limit=3
+
+
+vault token-lookup 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
+Key           Value
+......
+num_uses      3
+```
+
+!SUB
+Now that we have a token let's add something to cubbyhole and see what happens
+```
+vault auth 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
+Successfully authenticated!
+
+vault write cubbyhole/my-app actual-token=1234
+Success! Data written to: cubbyhole/my-app
+
+vault read cubbyhole/my-app
+Key           Value
+actual-token  1234
+```
+
+Reading the value again
+```
+vault read cubbyhole/my-app
+Error reading cubbyhole/my-app: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/cubbyhole/my-app
+Code: 403. Errors:
+
+* permission denied
+```
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
