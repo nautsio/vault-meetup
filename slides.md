@@ -152,7 +152,83 @@ read write syntax doc: [/docs/commands/read-write.html](https://www.vaultproject
 # PostgreSQL Secret backend (Werner)
 
 !SUB
-# Transit secret backend (Armin)
+# Transit secret backend
+The transit secret backend is used to encrypt/decrypt data in-transit. Vault doesn't store the data sent to the backend. It can also be viewed as "encryption as a service."
+The primary use case for the transit backend is to encrypt data from applications while still storing that encrypted data in some primary data store.
+
+To use the transit secret backend we need to mount it
+```
+vault mount transit
+Successfully mounted 'transit' at 'transit'!
+```
+
+doc: [secrets/transit/index.html](https://www.vaultproject.io/docs/secrets/transit/index.html)
+
+!SUB
+After mounting the transit secret backend we need to create a "named encription key" that can be referenced and used by other applications with independent keys.
+```
+vault write -f transit/keys/vault-meetup
+Success! Data written to: transit/keys/vault-meetup
+```
+
+What have we created
+```
+vault read transit/keys/vault-meetup
+Key                     Value
+cipher_mode             aes-gcm
+deletion_allowed        false
+derived                 false
+keys                    map[1:1.463208292e+09]
+latest_version          1
+min_decryption_version  1
+name                    vault-meetup
+```
+
+!SUB
+It's time to actually encrypt something, you can encypt any data aslong as it is base64 encoded. In our case let's encrypt a sentence.
+```
+echo -n "I am at the Vault meetup" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
+Key         Value
+ciphertext  vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+```
+
+Now let's see try to decrypt it
+```
+vault write transit/decrypt/vault-meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+Key       Value
+plaintext SSBhbSBhdCB0aGUgVmF1bHQgbWVldHVw
+
+echo "SSBhbSBhdCB0aGUgVmF1bHQgbWVldHVw" | base64 -D
+I am at the Vault meetup
+```
+
+!SUB
+We can also rotate the key, meening we can encrypt with a new key but we can decrypt with both keys
+```
+vault write -f transit/keys/vault-meetup/rotate
+Success! Data written to: transit/keys/vault-meetup/rotate
+
+echo -n "Hallo" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
+Key         Value
+ciphertext  vault:v2:7XTo4TQW+15zRMXA2NED2b8b7Tqrjhc2FVeAaSCbAISP
+
+vault read transit/keys/vault-meetup
+Key                     Value
+cipher_mode             aes-gcm
+deletion_allowed        false
+derived                 false
+keys                    map[1:1.463208292e+09 2:1.463208919e+09]
+latest_version          2
+min_decryption_version  1
+name                    vault-meetup
+```
+
+It is also posible to update the encrypted data to the new key without ever seeing the decryted text
+```
+vault write transit/rewrap/vault-meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+Key         Value
+ciphertext  vault:v2:ZruZRACkqXq+DrU0LF3u67s898l1qyqYiCXP2Sj41tMyjU4KUipQextfsDOc+kwIlq2fkg==
+```  
 
 !SUB
 # Cubbyhole backend (Armin)
