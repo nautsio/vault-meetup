@@ -7,432 +7,386 @@
     <td>**Armin Coralic**</td><td>*[acoralic@xebia.com](mailto:acoralic@xebia.com)*</td>
   </tr>
   <tr>
-    <td>**Mark van Holsteijn**</td><td>*[mvanholsteijn@xebia.com](mailto:mvanholsteijn@xebia.com)*</td>
+    <td>**Ivo Verberk**</td><td>*[iverberk@xebia.com](mailto:iverberk@xebia.com)*</td>
   </tr>
   <tr>
-    <td>**Erik Veld**</td><td>*[eveld@xebia.com](mailto:eveld@xebia.com)*</td>
+    <td>**Werner Buck**</td><td>*[wbuck@xebia.com](mailto:wbuck@xebia.com)*</td>
   </tr>
   <tr><td>&nbsp;</td></tr>
   <tr>
-    <td>**Slides**</td><td>[http://nauts.io/nomad-meetup](http://nauts.io/nomad-meetup)</td>
+    <td>**Slides**</td><td>[http://nauts.io/vault-meetup](http://nauts.io/vault-meetup)</td>
   </tr>
   <tr>
-    <td>**Files**</td><td>[http://github.com/nautsio/nomad-meetup](http://github.com/nautsio/nomad-meetup)</td>
+    <td>**Files**</td><td>[http://github.com/nautsio/vault-meetup](http://github.com/nautsio/vault-meetup)</td>
   </tr>
 </table>
 </center>
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-<center>![Nomad](img/nomad-logo.png)</center>
+<center>![Vault](img/vault-logo.png)</center>
 
 !SLIDE
-Nomad is a tool for **managing a cluster of machines and running applications on them**. Nomad **abstracts away machines** and the location of applications, and instead **enables users to declare what they want to run** and Nomad handles where they should run and how to run them.
+# Vault
+Vault is a tool for **securely** accessing secrets. A **secret** is anything that you want to tightly control access to, such as API keys, passwords, certificates, and more. Vault provides a **unified interface** to any secret, while providing **tight access control** and recording a detailed **audit log**.
+
+!SUB
+# Without Vault
+- More and more secrets
+- Secrets all over the place
+- No insight who uses which secret
+- No procedure in case something bad happens
+
+!SUB
+# With Vault
+- Centralized source for secrets
+- Unified access interface
+- Pluggable backends
 
 !SUB
 # Architecture
-![Architecture](img/architecture.png)
+![Architecture](img/vault-architecture.png)
 
 !SUB
-# Phase 1: Evaluation
-![Evaluation](img/evaluation.png)
+# (Un)sealing the Vault
+![Architecture](img/keys.png)
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Backends
 
 !SUB
-# Phase 2: Planning
-![Planning](img/planning.png)
+# Storage Backend
+A storage backend is responsible for durable storage of encrypted data. Backends are not trusted by Vault and are only expected to provide durability. The storage backend is configured when starting the Vault server.
 
 !SUB
-# Phase 3: Allocation
-![Allocation](img/allocation.png)
+# Secret Backend
+A secret backend is responsible for managing secrets. Simple secret backends like the "generic" backend simply return the same secret when queried. Some backends support using policies to dynamically generate a secret each time they are queried.
 
 !SUB
-- **Job, Task & Taskgroup**: A Job is a specification of tasks that Nomad should run. It consists of Taskgroups, which themselves contain one ore more Tasks.
-- **Allocation**: An Allocation is a placement of a Task on a node.
-- **Evaluation**: Evaluations are the mechanism by which Nomad makes scheduling decisions.
-- **Node, Agent, Server & Client**: A Client of Nomad and a Node are a machine that tasks can be run on. Nomad servers are the brains of the cluster. An Agent can be run in either Client or Server mode.
-- **Task Driver**: A Driver represents the basic means of executing your Tasks.
+# Auth Backend
+Auth backends are the components in Vault that perform authentication and are responsible for assigning identity and a set of policies to a user.
 
 !SUB
-# Job types
-- **Service**: The service scheduler is designed for scheduling long lived services that should never go down.
-- **Batch**: Batch jobs are much less sensitive to short term performance fluctuations and are short lived, finishing in a few minutes to a few days. They can be scheduled and recurring.
-- **System**: The system scheduler is used to register jobs that should be run on all clients that meet the job's constraints.
-
-doc: [/docs/jobspec/schedulers.html](https://www.nomadproject.io/docs/jobspec/schedulers.html)
-
-!SUB
-# Task drivers
-- **Docker**: Run a Docker container
-- **Rkt**: Run a Rkt container
-- **Exec**: Execute a command for a task using the underlying isolation primitives of the operating system to limit the tasks access to resources
-- **Rawexec**: Execute a command for a task without any isolation
-- **Java**: Run a downloaded Java jar file
-- **Qemu**: Start a Virtual Machine
-
-doc: [/docs/drivers/index.html](https://www.nomadproject.io/docs/drivers/index.html)
+# Audit Backend
+Audit backends are the components in Vault that keep a detailed log of all requests and response to Vault.
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # The Setup
 
-!SLIDE
-<!-- .slide: data-background="#6C1D5F" -->
-# Jobs
+Download from
 
 !SUB
-# Creating
-Nomad can initialize an example job for us which we can then modify to our own requirements:
+# Start vault server
+
+Start in dev mode (always unsealed)
+```
+$ vault server -dev &> vault.log &
+==> WARNING: Dev mode is enabled!
+...
+```
+Configure client
+```
+$ export VAULT_ADDR='http://127.0.0.1:8200'
+$ vault status
+Sealed: false
+Key Shares: 1
+Key Threshold: 1
+Unseal Progress: 0
+
+High-Availability Enabled: false
+```
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Secrets (IVO)
+
+!SUB
+# Hello world secret
 
 ```
-$ nomad init
-Example job file written to example.nomad
+$ vault write secret/hello value=world
+Success! Data written to: secret/hello
+```
 
-$ cat example.nomad
-# There can only be a single job definition per file.
-# Create a job with ID and Name 'example'
-job "example" {
-    # Run the job in the global region, which is the default.
-    # region = "global"
+!SUB
+# Alternate syntax
+
+There are multiple ways to write data, including stdin and from file.
+
+From stdin
+```
+$ echo -n "bar" | vault write secret/foo value=-
+Success! Data written to: secret/hello
+```
+
+From file
+
+```
+$ cat << EOF > data.json
+{ "value": "itsasecret" }
+EOF
+$ vault write secret/password @data.json
 ...
 ```
 
-doc: [/docs/jobspec/index.html](https://www.nomadproject.io/docs/jobspec/index.html)
+read write syntax doc: [/docs/commands/read-write.html](https://www.vaultproject.io/docs/commands/read-write.html)
+
+!SUB (Ivo)
+# Policies
+
+* token-create
+* policy maken
 
 !SUB
-```
-job "helloworld-v1" {
-  datacenters = ["dc1"]
-  type = "service"
+# Authentication: Username & Password
+Token authentication is great but if you want to allow users to connect without much effort then the "userpass" combination is a nice way. The "userpass" auth backend allows users to authenticate with Vault using a username and password combination.
 
-  update {
-    stagger = "30s"
-    max_parallel = 1
-  }
-
-  group "hello-group" {
-    count = 1
-    task "hello-task" {
-      driver = "docker"
-      config {
-        image = "eveld/helloworld:1.0.0"
-        port_map { http = 8080 }
-      }
-      resources {
-        cpu = 100
-        memory = 200
-        network { port "http" {} }
-...
+To use it we need to enable it
 ```
-jobs/helloworld-v1.nomad
+vault auth-enable userpass
+Successfully enabled 'userpass' at 'userpass'!
+```
+
+doc: [auth/userpass.html](https://www.vaultproject.io/docs/auth/userpass.html)
 
 !SUB
-# Launching
-Use the run command of the Nomad CLI:
+We can see which auth backends are enabled
 ```
-$ export NOMAD_ADDR=http://nomad-01.stack.gce.nauts.io:4646
-$ nomad run helloworld-v1.nomad
-==> Monitoring evaluation "3d823c52-929a-fa8b-c50d-1ac4d00cf6b7"
-    Evaluation triggered by job "hellloworld-v1"
-    Allocation "f67a-72a4-5a13" created: node "5b7c-a959-dfd9", group "hello-group"
-    Evaluation status changed: "pending" -> "complete"
-==> Evaluation "3d823c52-929a-fa8b-c50d-1ac4d00cf6b7" finished with status "complete"
+vault auth -methods
+Path       Type      Description
+token/     token     token based credentials
+userpass/  userpass
 ```
 
-<br />
-You can also submit a job in JSON format to the HTTP API endpoint:
+Let's create a username & password to authenticate to Vault with root policies instead of using an token
 ```
-$ curl -X POST -d @helloworld-v1.json $NOMAD_ADDR/v1/jobs
-```
-doc: [/docs/http/index.html](https://www.nomadproject.io/docs/http/index.html)
-
-!SUB
-# Where is our job?
-```
-$ curl -s $NOMAD_ADDR/v1/job/helloworld-v1/allocations | jq .
-{
-  ...
-}
+vault write auth/userpass/users/meetup password=1234 policies=root
+Success! Data written to: auth/userpass/users/meetup
 ```
 
-Search for the allocations where **.TaskStates.helloworld.State** is not "dead" and collect their **.ID**'s. For each of those .ID's:
+Now we can log in with that username & password
 ```
-$ curl -s $NOMAD_ADDR/v1/allocation/<ID> | jq .
-{
-  ...
-}
-```
-Inside the **.TaskResources.helloworld** block, for each of the **.Networks**, collect the **.IP** and for each of the **.DynamicPorts**, their **.Value**.
-Those are the ip's and corresponding ports for your service.
-
-!SUB
-Or you can use some JQ-fu and get it with a script:
-
-```
-#!/bin/bash
-JOB=$1
-TASK=$2
-
-# This obviously only works if there is just one port exposed per task.
-for ALLOC in $(curl -s "$NOMAD_ADDR/v1/job/$JOB/allocations" \
-  | jq --arg TASK $TASK -r '.[] | select(.TaskStates | .[$TASK] | .State != "dead") | .ID')
-do
-  curl -s "$NOMAD_ADDR/v1/allocation/$ALLOC" \
-    | jq --arg TASK $TASK -r '.TaskResources | .[$TASK] | .Networks[0].IP + ":" + (.Networks[0].DynamicPorts[0].Value | tostring)'
-done
-
-$ ./get_job_address.sh helloworld-v1 hello-task
-10.20.30.8:42957
-```
-
-!SUB
-Check that the job is running properly by calling it:
-```
-$ curl http://10.20.30.8:42957
-Hello v1!
-```
-
-!SUB
-# Constraints
-By specifying constraints you can dictate a set of rules that Nomad will follow when placing your jobs. These constraints can be on **resources**, self applied **metadata** and other configured **attributes**.
-
-```
-constraint {
-  attribute = "$node.datacenter"
-  value = "dc1"
-}
-```
-doc: [/docs/jobspec/index.html](https://www.nomadproject.io/docs/jobspec/index.html)
-
-<br />
-- *What happens if you target a constraint that can't be met?*
-
-!SUB
-# Restarting
-Very few tasks are immune to failure and the addition of **restart policies** recognizes that and allows users to rely on Nomad to keep the task running through transient failures.
-
-```
-restart {
-  interval = "1m"
-  attempts = 2
-  delay = "15s"
-  on_success = true
-  mode = "delay"
-}
-```
-doc: [/docs/jobspec/index.html](https://www.nomadproject.io/docs/jobspec/index.html)
-
-!SUB
-# Scaling
-Nomad can handle the scaling of your application for you, all you have to do is provide the **desired amount** of instances you want to be running.
-This can only be applied on the **taskgroup** level.
-
-```
-count = 5
-```
-doc: [/docs/jobspec/index.html](https://www.nomadproject.io/docs/jobspec/index.html)
-
-<br />
-- *What happens if you make the count larger than the number of machines?*
-
-!SUB
-# Updating
-Nomad allows us to easily do **rolling updates**. Add the **update block** and change the **version** of our job, to do a rolling update.
-
-```
-job "helloworld-v2" {
-  datacenters = ["dc1"]
-  type = "service"
-
-  update {
-    stagger = "30s"
-    max_parallel = 1
-  }
-
-  group "hello-group" {
-    count = 5
-    task "hello-task" {
-      driver = "docker"
-      config {
-        image = "eveld/helloworld:2.0.0"
-...
-```
-doc: [/docs/jobspec/index.html](https://www.nomadproject.io/docs/jobspec/index.html)
-
-!SLIDE
-<!-- .slide: data-background="#6C1D5F" -->
-# Service discovery
-
-!SUB
-- Uses Consul to expose services and works **without bootstrapping**
-- Defined **inside the job description**
-- **No external tools** such as Registrator needed
-
-```
-service {
-  name = "${TASKGROUP}-helloworld-v1"
-  tags = ["hello", "v1"]
-  port = "http"
-  check {
-    type = "http"
-    interval = "10s"
-    timeout = "2s"
-    path = "/"
-  }
-}
-```
-doc: [/docs/jobspec/servicediscovery.html](https://www.nomadproject.io/docs/jobspec/servicediscovery.html)
-
-!SLIDE
-<!-- .slide: data-background="#6C1D5F" -->
-# Resource management
-
-!SUB
-In order to schedule jobs on the right nodes, Nomad needs to know **which resources**
-are available and **where**, and which resources a job needs. Nomad currently can manage the following resources:
-- CPU cycles
-- memory
-- Disk space
-- Disk IO
-- Network ports
-- Network IO
-
-!SUB
-# Available Resources
-- These are resources Nomad detects at **startup time**
-- Since recent versions Nomad **fingerprints periodically**
-- Processes not scheduled by Nomad are **not** considered
-- Currently it is **not** possible to query unallocated resources
-
-!SUB
-The "node" endpoint shows the detected resources:
-
-```
-$ curl http://localhost:4646/v1/node/0af1abf0-d55c-3923-188f-495bed729a4e | jq .Resources
-{
-  "CPU": 2500,
-  "MemoryMB": 1704,
-  "DiskMB": 7493,
-  "IOPS": 0,
-  "Networks": [
-    {
-      "Device": "eth0",
-      "CIDR": "10.20.30.5/32",
-      "IP": "10.20.30.5",
-      "MBits": 1000,
-      "ReservedPorts": null,
-      "DynamicPorts": null
-    }
-  ]
-}
-```
-
-doc: https://www.nomadproject.io/docs/http/node.html
-
-!SUB
-# Reserving Resources
-Jobs can specify **which** and **how many** resources the need. Nomad the may instruct
-the task driver (e.g. Docker) to not let the process use more.
-
-For example the default a job may specify (within the "task" section):
-
-```
-resources {
-	cpu = 500 # 500 Mhz
-	memory = 256 # 256MB
-	network {
-		mbits = 10
-		port "db" {
-      static = 3306
-		}
-	}
-}
+vault auth -method=userpass username=meetup password=1234
+Successfully authenticated!
+token: a6e9151d-da97-a3c9-172c-ec3e62aa2d96
+token_duration: 0
+token_policies: [root]
 ```
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-# Things don't always go well in real life
+# Dynamic Secrets
 
 !SUB
-# Job failures
-- *Are jobs correctly restarted?*
+# PostgreSQL Secret backend
+The PostgreSQL backend is __dynamic__, meaning secrets are generated when they are accessed.
+Vault will connect to postgresql and create an user that will expire.
+
+To use the postgresql secret backend we need to mount it:
+```
+$ vault mount postgresql
+Successfully mounted 'postgresql' at 'postgresql'!
+```
+
+Also, lets launch the postgresql server in the background shall we?
+```
+$ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=shoehorse \
+ -p "5432:5432" -d postgres
+$ telnet $(docker-machine ip) 5432 # verify you can
+```
+doc: [secrets/postgresql/](https://www.vaultproject.io/docs/secrets/postgresql/)
+
 
 !SUB
-# Client failures
-Example of a killed node in the docker farm:
+
+Configure how vault would connect to postgresql (connecting string).
+
 ```
-root@bbakker-nomad-01:~# nomad node-status
-ID        Datacenter  Name                  Class   Drain  Status
-0b46eda1  dc1         bbakker-farm-01-jmja  docker  false  down
-e1191817  dc1         bbakker-farm-02-1q3f  docker  false  ready
-9b2e3f82  dc1         bbakker-farm-01-q1ll  docker  false  ready
-ecabf2fa  dc1         bbakker-farm-01-6ys5  docker  false  ready
-954b5b89  sys1        bbakker-nomad-01      system  false  ready
-f99014c9  sys1        bbakker-nomad-02      system  false  ready
-45b2d888  sys1        bbakker-nomad-03      system  false  ready
-50f3d652  dc1         bbakker-farm-02-42x5  docker  false  ready
+$ vault write postgresql/config/connection \
+    connection_url="postgresql://postgres:shoehorse@$(docker-machine ip):5432/postgres?sslmode=disable"
+Success! Data written to: postgresql/config/connection
 ```
 
-- *Are jobs correctly transferred to other nodes?*
+The next step is to configure a role. A role is a logical name that maps to a policy used to generated those credentials. For example, lets create a "readonly" role:
 
-!SUB
-# Master failures
-- *Can scheduling still continue?*
+```
+$ vault write postgresql/roles/readonly \
+    sql="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+Success! Data written to: postgresql/roles/readonly
+```
+Note: more complex GRANT queries can be used to further customize privileges of the role
 
 !SUB
-# Machine failures
-- *Can scheduling still continue?*
-- *Are jobs correctly transferred to other nodes?*
+
+Time to request some credentials.
+
+```
+$ vault read postgresql/creds/readonly
+Key            	Value
+lease_id       	postgresql/creds/readonly/f2682645-f8cd-dd93-8f3f-427b97707ea4
+lease_duration 	2592000
+lease_renewable	true
+password       	dfda962b-7015-390e-16f2-62b20a379142
+username       	root-9fc599d2-9bf5-063c-483d-89018ff17751
+```
+Note: the lease and lease-max
+
+Lets try to connect using an interactive container running `psql`:
+
+```
+$ docker run -it --rm --link vault-meetup-postgres:postgres postgres \
+  psql -h postgres -U root-9fc599d2-9bf5-063c-483d-89018ff17751 -d postgres
+```
+In psql try **\du** to list the current users. Perhaps also try to tweak the lease time for new users:
+```
+$ vault write postgresql/config/lease lease=1h lease_max=24h
+```
+
 
 !SUB
-# Decommissioning nodes
-We can let Nomad move all of a node's applications by letting it drain:
+# Transit secret backend
+The transit secret backend is used to encrypt/decrypt data in-transit. Vault doesn't store the data sent to the backend. It can also be viewed as "encryption as a service."
+The primary use case for the transit backend is to encrypt data from applications while still storing that encrypted data in some primary data store.
+
+To use the transit secret backend we need to mount it
 ```
-$ nomad node-drain -enable 37b31879
+$ vault mount transit
+Successfully mounted 'transit' at 'transit'!
 ```
-We can then view the status of the node with the node-status command:
+
+doc: [secrets/transit/index.html](https://www.vaultproject.io/docs/secrets/transit/index.html)
+
+!SUB
+After mounting the transit secret backend we need to create a "named encryption key" that can be referenced and used by other applications with independent keys.
 ```
-$ nomad node-status
-ID        DC    Name                  Class   Drain  Status
-37b31879  dc1   bbakker-farm-01-pkdh  docker  true   ready
-033744da  dc1   bbakker-farm-01-umft  docker  false  down
-b7d2886d  dc1   bbakker-farm-02-2ru3  docker  false  ready
-2fae0a91  dc1   bbakker-farm-01-m4s0  docker  false  ready
-d8211338  dc1   bbakker-farm-02-17v3  docker  false  ready
-ee340c8d  sys1  bbakker-nomad-03      system  false  ready
-dfdd7c8e  sys1  bbakker-nomad-01      system  false  ready
-0d470098  sys1  bbakker-nomad-02      system  false  ready
+vault write -f transit/keys/vault-meetup
+Success! Data written to: transit/keys/vault-meetup
+```
+
+What have we created
+```
+vault read transit/keys/vault-meetup
+Key                     Value
+cipher_mode             aes-gcm
+deletion_allowed        false
+derived                 false
+keys                    map[1:1.463208292e+09]
+latest_version          1
+min_decryption_version  1
+name                    vault-meetup
 ```
 
 !SUB
-On each machine there is a script that is called on shutdown, which drains a node and waits until all applications are moved.
+It's time to actually encrypt something, you can encrypt any data as long as it is base64 encoded. In our case let's encrypt a sentence.
 ```
-#!/bin/bash
-NOMAD_ADDR="http://${1:-localhost}:4646"
-NODE_ID=$(curl -s $NOMAD_ADDR/v1/agent/self | jq -r .stats.client.node_id)
+echo -n "I am at the Vault meetup" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
+Key         Value
+ciphertext  vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+```
 
-echo enable node drain
-curl -s -X POST $NOMAD_ADDR/v1/node/$NODE_ID/drain?enable=true > /dev/null
+Now let's see try to decrypt it
+```
+vault write transit/decrypt/vault-meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+Key       Value
+plaintext SSBhbSBhdCB0aGUgVmF1bHQgbWVldHVw
 
-echo wait for drain of all allocations
-for t in {0..59} ; do
-	ALLOCS=$(curl -s $NOMAD_ADDR/v1/node/$NODE_ID/allocations \
-    | jq '[.[] | select(.ClientStatus == "running")] | length')
-	echo remaining allocs is $ALLOCS
-	if [ "0" == "$ALLOCS" ] ; then
-		echo node drain completed
-		exit 0
-	fi
-	sleep 1
-done
+echo "SSBhbSBhdCB0aGUgVmF1bHQgbWVldHVw" | base64 -D
+I am at the Vault meetup
 ```
 
 !SUB
-# Preemptible instances
-Since losing a machine is not critical anymore, we can take advantage of the node-drain feature to use **preemptible instances** at our cloud provider. This will call node-drain **30 seconds** before the node shuts down and **moves all the applications** to healthy nodes.
+We can also rotate the key, meaning we can encrypt with a new key but we can decrypt with both keys
+```
+vault write -f transit/keys/vault-meetup/rotate
+Success! Data written to: transit/keys/vault-meetup/rotate
+
+echo -n "Hallo" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
+Key         Value
+ciphertext  vault:v2:7XTo4TQW+15zRMXA2NED2b8b7Tqrjhc2FVeAaSCbAISP
+
+vault read transit/keys/vault-meetup
+Key                     Value
+cipher_mode             aes-gcm
+deletion_allowed        false
+derived                 false
+keys                    map[1:1.463208292e+09 2:1.463208919e+09]
+latest_version          2
+min_decryption_version  1
+name                    vault-meetup
+```
+
+It is also posible to update the encrypted data to the new key without ever seeing the decryted text
+```
+vault write transit/rewrap/vault-meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+Key         Value
+ciphertext  vault:v2:ZruZRACkqXq+DrU0LF3u67s898l1qyqYiCXP2Sj41tMyjU4KUipQextfsDOc+kwIlq2fkg==
+```  
+
+!SUB
+# Cubbyhole backend
+The cubbyhole secret backend is used to store arbitrary secrets within the configured physical storage for Vault.
+
+This backend differs from the generic backend in that the generic backend's values are accessible to any token with read privileges on that path. In cubbyhole, paths are scoped per token; no token can access another token's cubbyhole, whether to read, write, list, or for any other operation. When the token expires, its cubbyhole is destroyed.
+
+doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
+
+!SUB
+Passing an token to an application that can ask for database access could be sniffed, to make that more save we can store the actual token in cubbyhole and then generate a new token with limited access times that can retrieve that token. If the application can retrieve the token all is fine and cubbyhole is gone, if it can't we know something happened with the token and we need to act.
+
+Let's create a token with limited use
+```
+vault token-create -use-limit=3
+
+
+vault token-lookup 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
+Key           Value
+......
+num_uses      3
+```
+
+!SUB
+Now that we have a token let's add something to cubbyhole and see what happens
+```
+vault auth 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
+Successfully authenticated!
+
+vault write cubbyhole/my-app actual-token=1234
+Success! Data written to: cubbyhole/my-app
+
+vault read cubbyhole/my-app
+Key           Value
+actual-token  1234
+```
+
+Reading the value again
+```
+vault read cubbyhole/my-app
+Error reading cubbyhole/my-app: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/cubbyhole/my-app
+Code: 403. Errors:
+
+* permission denied
+```
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Advanced
+
+!SUB
+# SSH (Armin)
+
+!SUB
+# Github (Werner)
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 <center>![HashiConf](img/hashiconf.png)</center>
-Want to hear **best practices** and the **latest news** about Nomad and other HashiCorp products?
+Want to hear **best practices** and the **latest news** about Vault and other HashiCorp products?
+
+TODO: CODE
 
 Come to **HashiConf EU the 13th-15th of June**!
