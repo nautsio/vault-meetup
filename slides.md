@@ -139,7 +139,7 @@ read write syntax doc: [/docs/commands/read-write.html](https://www.vaultproject
 * token-create
 * policy maken
 
-!SUB 
+!SUB
 # Authentication: Username & Password
 Token authentication is great but if you want to allow users to connect without much effort then the "userpass" combination is a nice way. The "userpass" auth backend allows users to authenticate with Vault using a username and password combination.
 
@@ -180,7 +180,71 @@ token_policies: [root]
 # Dynamic Secrets
 
 !SUB
-# PostgreSQL Secret backend (Werner)
+# PostgreSQL Secret backend
+The PostgreSQL backend is __dynamic__, meaning secrets are generated when they are accessed.
+Vault will connect to postgresql and create an user that will expire.
+
+To use the postgresql secret backend we need to mount it:
+```
+$ vault mount postgresql
+Successfully mounted 'postgresql' at 'postgresql'!
+```
+
+Also, lets launch the postgresql server in the background shall we?
+```
+$ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=shoehorse \
+ -p "5432:5432" -d postgres
+$ telnet $(docker-machine ip) 5432 # verify you can
+```
+doc: [secrets/postgresql/](https://www.vaultproject.io/docs/secrets/postgresql/)
+
+
+!SUB
+
+Configure how vault would connect to postgresql (connecting string).
+
+```
+$ vault write postgresql/config/connection \
+    connection_url="postgresql://postgres:shoehorse@$(docker-machine ip):5432/postgres?sslmode=disable"
+Success! Data written to: postgresql/config/connection
+```
+
+The next step is to configure a role. A role is a logical name that maps to a policy used to generated those credentials. For example, lets create a "readonly" role:
+
+```
+$ vault write postgresql/roles/readonly \
+    sql="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+Success! Data written to: postgresql/roles/readonly
+```
+Note: more complex GRANT queries can be used to further customize privileges of the role
+
+!SUB
+
+Time to request some credentials.
+
+```
+$ vault read postgresql/creds/readonly
+Key            	Value
+lease_id       	postgresql/creds/readonly/f2682645-f8cd-dd93-8f3f-427b97707ea4
+lease_duration 	2592000
+lease_renewable	true
+password       	dfda962b-7015-390e-16f2-62b20a379142
+username       	root-9fc599d2-9bf5-063c-483d-89018ff17751
+```
+Note: the lease and lease-max
+
+Lets try to connect using an interactive container running `psql`:
+
+```
+$ docker run -it --rm --link vault-meetup-postgres:postgres postgres \
+  psql -h postgres -U root-9fc599d2-9bf5-063c-483d-89018ff17751 -d postgres
+```
+In psql try **\du** to list the current users. Perhaps also try to tweak the lease time for new users:
+```
+$ vault write postgresql/config/lease lease=1h lease_max=24h
+```
+
 
 !SUB
 # Transit secret backend
@@ -189,14 +253,14 @@ The primary use case for the transit backend is to encrypt data from application
 
 To use the transit secret backend we need to mount it
 ```
-vault mount transit
+$ vault mount transit
 Successfully mounted 'transit' at 'transit'!
 ```
 
 doc: [secrets/transit/index.html](https://www.vaultproject.io/docs/secrets/transit/index.html)
 
 !SUB
-After mounting the transit secret backend we need to create a "named encription key" that can be referenced and used by other applications with independent keys.
+After mounting the transit secret backend we need to create a "named encryption key" that can be referenced and used by other applications with independent keys.
 ```
 vault write -f transit/keys/vault-meetup
 Success! Data written to: transit/keys/vault-meetup
@@ -216,7 +280,7 @@ name                    vault-meetup
 ```
 
 !SUB
-It's time to actually encrypt something, you can encypt any data aslong as it is base64 encoded. In our case let's encrypt a sentence.
+It's time to actually encrypt something, you can encrypt any data as long as it is base64 encoded. In our case let's encrypt a sentence.
 ```
 echo -n "I am at the Vault meetup" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
 Key         Value
@@ -234,7 +298,7 @@ I am at the Vault meetup
 ```
 
 !SUB
-We can also rotate the key, meening we can encrypt with a new key but we can decrypt with both keys
+We can also rotate the key, meaning we can encrypt with a new key but we can decrypt with both keys
 ```
 vault write -f transit/keys/vault-meetup/rotate
 Success! Data written to: transit/keys/vault-meetup/rotate
@@ -270,7 +334,7 @@ This backend differs from the generic backend in that the generic backend's valu
 doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
 
 !SUB
-Passing an token to an application that can ask for database access could be sniffed, to make that more save we can store the actual token in cubbyhole and then generate a new token with limited access times that can retrieve that token. If the application can retreive the token all is fine and cubbyhole is gone, if it can't we know something happend with the token and we need to act.
+Passing an token to an application that can ask for database access could be sniffed, to make that more save we can store the actual token in cubbyhole and then generate a new token with limited access times that can retrieve that token. If the application can retrieve the token all is fine and cubbyhole is gone, if it can't we know something happened with the token and we need to act.
 
 Let's create a token with limited use
 ```
@@ -323,6 +387,6 @@ Code: 403. Errors:
 <center>![HashiConf](img/hashiconf.png)</center>
 Want to hear **best practices** and the **latest news** about Vault and other HashiCorp products?
 
-TODO: CODE 
+TODO: CODE
 
 Come to **HashiConf EU the 13th-15th of June**!
