@@ -129,38 +129,55 @@ the export VAULT_ADDR=... command from above properly.
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-# Secrets (IVO)
+# Secrets and Policies
 
 !SUB
-# Hello world secret
+# Writing secrets
 
 ```
-$ vault write secret/hello value=world
-Success! Data written to: secret/hello
+$ vault write secret/hello value=world foo=bar
+```
+This writes the pairs *value=world* and *foo=bar* to the path secret/hello. The secret/ 
+prefix is where arbitrary secrets can be read and written.
+
+```
+$ echo -n '{"value":"itsasecret"}' | vault write secret/password -
+$ echo -n "itsasecret" | vault write secret/password value=-
+```
+This first command writes the pair *value=itsasecret* the path secret/password
+via a full JSON object. The second command writes to the same path but it specifies
+the key via the command and the JSON value through stdin.
+
+!SUB
+# Reading secrets
+Data can be read using vault read. This command is very simple:
+
+```
+$ vault read secret/password
+Key             Value
+lease_id        secret/password/76c844fb-aeba-a766-0a50-2b907072233a
+lease_duration  2592000
+value           itsasecret
+```
+You can use the -format flag to get various different formats out from the command. Some formats are easier to use in different environments than others.
+
+You can also use the -field flag to extract an individual field from the secret data.
+
+```
+$ vault read -field=value secret/password
+itsasecret
 ```
 
 !SUB
-# Alternate syntax
+# Deleting secrets
 
-There are multiple ways to write data, including stdin and from file.
-
-From stdin
-```
-$ echo -n "bar" | vault write secret/foo value=-
-Success! Data written to: secret/hello
-```
-
-From file
+Now that we've learned how to read and write a secret, let's go ahead and delete 
+it. We can do this with vault delete:
 
 ```
-$ cat << EOF > data.json
-{ "value": "itsasecret" }
-EOF
-$ vault write secret/password @data.json
-...
+$ vault delete secret/password
+Success! Deleted 'secret/password'
 ```
-
-read write syntax doc: [/docs/commands/read-write.html](https://www.vaultproject.io/docs/commands/read-write.html)
 
 !SUB (Ivo)
 # Policies
