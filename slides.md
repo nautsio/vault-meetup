@@ -48,11 +48,11 @@ and recording a detailed **audit log**.
 
 !SUB
 # Architecture
-![Architecture](img/vault-architecture.png)
+<center><div style="width: 75%; height: auto;"><img src="img/vault-architecture.png"/></div></center>
 
 !SUB
 # (Un)sealing the Vault
-![Architecture](img/keys.png)
+<center><div style="width: 75%; height: auto;"><img src="img/keys.png"/></div></center>
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
@@ -85,10 +85,13 @@ and response to Vault.
 # The Setup
 Download the appropriate Vault binary for your platform and add it to your PATH 
 so that it can be accessed from anywhere:
-
+<br/>
+<br/>
+<center>
 [Vault Downloads](https://www.vaultproject.io/downloads.html)<br>
 [Set PATH on Linux](https://stackoverflow.com/questions/14637979/how-to-permanently-set-path-on-linux)<br>
 [Set PATH on Windows](https://stackoverflow.com/questions/1618280/where-can-i-set-path-to-make-exe-on-windows)<br>
+</center>
 
 !SUB
 # Start vault server
