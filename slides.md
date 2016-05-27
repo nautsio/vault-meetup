@@ -133,7 +133,7 @@ the export VAULT_ADDR=... command from above properly.
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-# Secrets and Policies
+# Secrets
 
 !SUB
 # Writing secrets
@@ -163,7 +163,8 @@ lease_id        secret/password/76c844fb-aeba-a766-0a50-2b907072233a
 lease_duration  2592000
 value           itsasecret
 ```
-You can use the -format flag to get various different formats out from the command. Some formats are easier to use in different environments than others.
+You can use the -format flag to get various different formats out from the command. 
+Some formats are easier to use in different environments than others.
 
 You can also use the -field flag to extract an individual field from the secret data.
 
@@ -183,30 +184,50 @@ $ vault delete secret/password
 Success! Deleted 'secret/password'
 ```
 
-!SUB (Ivo)
-# Policies
-
-* token-create
-* policy maken
-
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # Authentication
 
 !SUB
-# Authentication: Username & Password
-Token authentication is great but if you want to allow users to connect without much effort then the "userpass" combination is a nice way. The "userpass" auth backend allows users to authenticate with Vault using a username and password combination.
+# Token Authentication
+
+Token authentication allows users to authenticate using a token, as well to create 
+new tokens, revoke secrets by token, and more.
+
+When you start a dev server with **vault server -dev**, it outputs your root token. 
+The root token is the initial access token to configure Vault. It has root 
+privileges, so it can perform any operation within Vault.
+
+!SUB
+Let's create a new token:
+```
+$ vault token-create
+Key             Value
+token           03ad6f52-495d-b7f4-165b-cd5ecbcc0853
+token_accessor  56b3fda1-218a-46ab-e8e6-a6cd37452bd3
+token_duration  0
+token_renewable true
+token_policies  [root]
+```
+Tokens have parent-child relationships. Since we used the root token to authenticate
+with Vault, this new token is a child of that root token. By default, it also inherits
+the permissions of the parent token, in this case the "root" policy which allows
+all operations within Vault. Policies will be discussed in the next section.
+
+!SUB
+# Userpass Authentication
+Token authentication is great but if you want to allow users to connect without
+much effort then the "userpass" combination is a nice way. The "userpass" auth 
+backend allows users to authenticate with Vault using a username and password combination.
 
 To use it we need to enable it
 ```
-vault auth-enable userpass
+$ vault auth-enable userpass
 Successfully enabled 'userpass' at 'userpass'!
 ```
 
-doc: [auth/userpass.html](https://www.vaultproject.io/docs/auth/userpass.html)
-
 !SUB
-We can see which auth backends are enabled
+We can see which auth backends are enabled:
 ```
 vault auth -methods
 Path       Type      Description
@@ -214,19 +235,88 @@ token/     token     token based credentials
 userpass/  userpass
 ```
 
-Let's create a username & password to authenticate to Vault with root policies instead of using an token
+Let's create a username & password to authenticate to Vault with the root policy
+instead of using an token:
 ```
 vault write auth/userpass/users/meetup password=1234 policies=root
 Success! Data written to: auth/userpass/users/meetup
 ```
 
-Now we can log in with that username & password
+Now we can log in with that username and password:
 ```
 vault auth -method=userpass username=meetup password=1234
 Successfully authenticated!
 token: a6e9151d-da97-a3c9-172c-ec3e62aa2d96
 token_duration: 0
 token_policies: [root]
+```
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Authorization
+
+!SUB
+# Policies
+Please read the (relatively short) [policy documentation](https://www.vaultproject.io/docs/concepts/policies.html) 
+in order to fully understand Vault policies and succesfully complete the upcoming exercises.
+
+!SUB
+Let's create and activate a policy in Vault. Copy the following example policy to
+a file called **policy.hcl**:
+```
+path "secret/*" {
+  policy = "write"
+}
+
+path "secret/foo" {
+  policy = "read"
+}
+```
+This policy allows storage of new secrets under any path in the secrets backend, 
+except for the "secret/foo" path.
+
+Store the policy in Vault with:
+```
+$ vault policy-write secret policy.hcl
+Policy 'secret' written.
+```
+
+!SUB
+Create a new token with policy we just created:
+```
+$ vault token-create -policy="secret"
+Key             Value
+token           $TOKEN
+token_accessor  71770cc5-14da-f0af-c6ce-17a0ae398d67
+token_duration  2592000
+token_renewable true
+token_policies  [default secret]
+```
+Notice the $TOKEN in the output which will be generated dynamically by Vault.
+
+**Before executing the next step please store your root token somewhere safe so that you can find it again later.**
+
+Now authenticate with the new token:
+```
+$ vault auth $TOKEN
+Successfully authenticated!
+```
+
+!SUB
+If the policy was succesfully applied we should be able to run the following command:
+```
+$ vault write secret/bar value=foobar
+Success! Data written to: secret/bar
+```
+However, the following command should be blocked by our policy:
+```
+$ vault write secret/foo value=bar
+Error writing data to secret/foo: Error making API request.
+
+URL: PUT http://127.0.0.1:8200/v1/secret/foo
+Code: 400. Errors:
+
+* permission denied
 ```
 
 !SLIDE
