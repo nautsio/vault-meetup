@@ -14,7 +14,7 @@
   </tr>
   <tr><td>&nbsp;</td></tr>
   <tr>
-    <td>**Slides**</td><td>[http://nauts.io/vault-meetup](http://nauts.io/vault-meetup)</td>
+    <td>**Slides**</td><td>[http://nauts.io/meetup](http://nauts.io/vault-meetup)</td>
   </tr>
   <tr>
     <td>**Files**</td><td>[http://github.com/nautsio/vault-meetup](http://github.com/nautsio/vault-meetup)</td>
@@ -111,8 +111,7 @@ With the dev server running, do the following three things:
 
 1. Copy the export VAULT_ADDR=... command from your terminal output and run it
 in a **different** terminal window. This will configure the Vault client to talk to the dev server.
-2. Save the unseal key somewhere.
-3. Do the same as step 2, but with the root token.
+2. Save the root-token somewhere.
 
 !SUB
 # Check the Vault server
@@ -229,7 +228,7 @@ Successfully enabled 'userpass' at 'userpass'!
 !SUB
 We can see which auth backends are enabled:
 ```
-vault auth -methods
+$ vault auth -methods
 Path       Type      Description
 token/     token     token based credentials
 userpass/  userpass
@@ -238,18 +237,19 @@ userpass/  userpass
 Let's create a username & password to authenticate to Vault with the root policy
 instead of using an token:
 ```
-vault write auth/userpass/users/meetup password=1234 policies=root
+$ vault write auth/userpass/users/meetup password=1234 policies=root
 Success! Data written to: auth/userpass/users/meetup
 ```
 
 Now we can log in with that username and password:
 ```
-vault auth -method=userpass username=meetup password=1234
+$ vault auth -method=userpass username=meetup password=1234
 Successfully authenticated!
 token: a6e9151d-da97-a3c9-172c-ec3e62aa2d96
 token_duration: 0
 token_policies: [root]
 ```
+All information on the different auth backends can be found [here](https://www.vaultproject.io/docs/auth/index.html)
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
@@ -322,7 +322,6 @@ Code: 400. Errors:
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # Recap and next section
-#
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
@@ -341,25 +340,23 @@ Successfully mounted 'postgresql' at 'postgresql'!
 
 Also, let's launch a PostgreSQL server in the background:
 ```
-$ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=shoehorse \
+$ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=pwd \
  -p "5432:5432" -d postgres
-$ telnet $(docker-machine ip) 5432 # verify you can
 ```
-doc: [secrets/postgresql/](https://www.vaultproject.io/docs/secrets/postgresql/)
-
 
 !SUB
 
-Let's specify a connecting string so that Vault can connect to PostgresSQL.
+Let's specify a connecting string so that Vault can connect to PostgresSQL. The
+$IP variable in the connection string is the location of your Docker host. 
 
 ```
 $ vault write postgresql/config/connection \
-    connection_url="postgresql://postgres:shoehorse@$D_IP:5432/postgres?sslmode=disable"
+    connection_url="postgresql://postgres:pwd@$IP:5432/postgres?sslmode=disable"
 Success! Data written to: postgresql/config/connection
 ```
 
-The next step is to create a postgres role by configuring it in vault. Vault added a "/roles" path for you to add multiple roles. Lets create a "readonly" role for our postgresql backend.
-
+Next, we need to tell Vault how to create a new user in the PostgreSQL database.
+We do this by specifying an SQL statement that Vault uses when generating new credentials.
 ```
 $ vault write postgresql/roles/readonly \
     sql="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';
@@ -424,13 +421,13 @@ doc: [secrets/transit/index.html](https://www.vaultproject.io/docs/secrets/trans
 !SUB
 After mounting the transit secret backend we need to create a "named encryption key" that can be referenced and used by other applications with independent keys.
 ```
-vault write -f transit/keys/vault-meetup
-Success! Data written to: transit/keys/vault-meetup
+$ vault write -f transit/keys/meetup
+Success! Data written to: transit/keys/meetup
 ```
 
 What have we created
 ```
-vault read transit/keys/vault-meetup
+$ vault read transit/keys/vault-meetup
 Key                     Value
 cipher_mode             aes-gcm
 deletion_allowed        false
@@ -444,32 +441,32 @@ name                    vault-meetup
 !SUB
 It's time to actually encrypt something, you can encrypt any data as long as it is base64 encoded. In our case let's encrypt a sentence.
 ```
-echo -n "I am at the Vault meetup" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
+$ echo -n "vault" | base64 | vault write transit/encrypt/meetup plaintext=-
 Key         Value
-ciphertext  vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+ciphertext  $TEXT
 ```
 
 Now let's see try to decrypt it
 ```
-vault write transit/decrypt/vault-meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+$ vault write transit/decrypt/meetup ciphertext=$TEXT
 Key       Value
-plaintext SSBhbSBhdCB0aGUgVmF1bHQgbWVldHVw
+plaintext dmF1bHQ=
 
-echo "SSBhbSBhdCB0aGUgVmF1bHQgbWVldHVw" | base64 -D
-I am at the Vault meetup
+echo "dmF1bHQ=" | base64 -D
+vault
 ```
 
 !SUB
 We can also rotate the key, meaning we can encrypt with a new key but we can decrypt with both keys
 ```
-vault write -f transit/keys/vault-meetup/rotate
-Success! Data written to: transit/keys/vault-meetup/rotate
+$ vault write -f transit/keys/meetup/rotate
+Success! Data written to: transit/keys/meetup/rotate
 
-echo -n "Hallo" | base64 | vault write transit/encrypt/vault-meetup plaintext=-
+echo -n "Hallo" | base64 | vault write transit/encrypt/meetup plaintext=-
 Key         Value
 ciphertext  vault:v2:7XTo4TQW+15zRMXA2NED2b8b7Tqrjhc2FVeAaSCbAISP
 
-vault read transit/keys/vault-meetup
+$ vault read transit/keys/meetup
 Key                     Value
 cipher_mode             aes-gcm
 deletion_allowed        false
@@ -477,33 +474,42 @@ derived                 false
 keys                    map[1:1.463208292e+09 2:1.463208919e+09]
 latest_version          2
 min_decryption_version  1
-name                    vault-meetup
+name                    meetup
 ```
 
 It is also posible to update the encrypted data to the new key without ever seeing the decryted text
 ```
-vault write transit/rewrap/vault-meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
+$ vault write transit/rewrap/meetup ciphertext=vault:v1:o20swhyIdj+DyEAMHQ+1EIlwwN/jKTy/TGA3zDAoXXWHMTxQHKDBZPtBdb7Tj0lLaun9gA==
 Key         Value
 ciphertext  vault:v2:ZruZRACkqXq+DrU0LF3u67s898l1qyqYiCXP2Sj41tMyjU4KUipQextfsDOc+kwIlq2fkg==
 ```  
 
 !SUB
 # Cubbyhole backend
-The cubbyhole secret backend is used to store arbitrary secrets within the configured physical storage for Vault.
+The cubbyhole secret backend is used to store arbitrary secrets within the configured 
+physical storage for Vault.
 
-This backend differs from the generic backend in that the generic backend's values are accessible to any token with read privileges on that path. In cubbyhole, paths are scoped per token; no token can access another token's cubbyhole, whether to read, write, list, or for any other operation. When the token expires, its cubbyhole is destroyed.
+This backend differs from the generic backend in that the generic backend's values 
+are accessible to **any token** with read privileges on that path. In cubbyhole, paths 
+are scoped **per token**; no token can access another token's cubbyhole, whether to 
+read, write, list, or for any other operation. When the token expires, its cubbyhole is destroyed.
 
 doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
 
 !SUB
-Passing an token to an application that can ask for database access could be sniffed, to make that more save we can store the actual token in cubbyhole and then generate a new token with limited access times that can retrieve that token. If the application can retrieve the token all is fine and cubbyhole is gone, if it can't we know something happened with the token and we need to act.
+One possible usage of the cubbyhole secret backend is passing a Vault token
+securely to an application. The actual application token can be stored in the
+cubbyhole backend and we can create a limited-use access token to reach the cubbyhole.
+By limiting the amount of times the access token can be used we ensure that the
+application token can only be retrieved once. After the application token is retrieved
+the access token becomes invalid and the cubbyhole is destroyed.
 
-Let's create a token with limited use
+Let's create a token with limited use:
 ```
-vault token-create -use-limit=3
+$ vault token-create -use-limit=3
 
 
-vault token-lookup 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
+$ vault token-lookup 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
 Key           Value
 ......
 num_uses      3
@@ -512,15 +518,15 @@ num_uses      3
 !SUB
 Now that we have a token let's add something to cubbyhole and see what happens
 ```
-vault auth 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
+$ vault auth 8dab6a3b-e8f3-c531-ed0d-34eda8398de5
 Successfully authenticated!
 
-vault write cubbyhole/my-app actual-token=1234
+$ vault write cubbyhole/my-app foo=bar
 Success! Data written to: cubbyhole/my-app
 
-vault read cubbyhole/my-app
+$ vault read cubbyhole/my-app
 Key           Value
-actual-token  1234
+foo           bar
 ```
 
 Reading the value again
