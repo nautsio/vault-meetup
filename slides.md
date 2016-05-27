@@ -347,7 +347,7 @@ $ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=pwd \
 !SUB
 
 Let's specify a connecting string so that Vault can connect to PostgresSQL. The
-$IP variable in the connection string is the location of your Docker host. 
+$IP variable in the connection string is the location of your Docker host.
 
 ```
 $ vault write postgresql/config/connection \
@@ -391,13 +391,11 @@ to list the current users.
 
 !SUB
 
-Vault enforces temporary credentials. In the case of PostgreSQL it is in the form of a **lease**.
+Vault only deals with temporary credentials. With the PostgreSQL backend, you can configure the lease as follows with two configuration keys:
 
-You can set two configuration keys called:
+**lease**: Vault will automatically revoke the credential after the configured time has elapsed. This forces the client to renew their credentials regularly.
 
-**lease**: Vault will automatically revoke the credential. This forces the client to renew their credentials at least hourly.
-
-**lease_max**: This value is templated as "{{duration}}" in the role configuration. It ensures that if connectivity is lost between vault and the postgresql server, postgresql will always expire the credential.
+**lease_max**: This value is templated as "{{duration}}" in the role configuration. It ensures that if vault is unable to revoke the credential after the lease time, postgresql will always expire the credential on its own.
 
 Set the lease to 1 minute, request a credential and see what happens when you login after a minute.
 
@@ -486,12 +484,12 @@ ciphertext  vault:v2:ZruZRACkqXq+DrU0LF3u67s898l1qyqYiCXP2Sj41tMyjU4KUipQextfsDO
 
 !SUB
 # Cubbyhole backend
-The cubbyhole secret backend is used to store arbitrary secrets within the configured 
+The cubbyhole secret backend is used to store arbitrary secrets within the configured
 physical storage for Vault.
 
-This backend differs from the generic backend in that the generic backend's values 
-are accessible to **any token** with read privileges on that path. In cubbyhole, paths 
-are scoped **per token**; no token can access another token's cubbyhole, whether to 
+This backend differs from the generic backend in that the generic backend's values
+are accessible to **any token** with read privileges on that path. In cubbyhole, paths
+are scoped **per token**; no token can access another token's cubbyhole, whether to
 read, write, list, or for any other operation. When the token expires, its cubbyhole is destroyed.
 
 doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
