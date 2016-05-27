@@ -488,7 +488,7 @@ doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cub
 One possible usage of the cubbyhole secret backend is passing a Vault token
 securely to an application. The actual application token can be stored in the
 cubbyhole backend and we can create a limited-use access token to reach the cubbyhole.
-We limit the amount of times the access token can be used to ensure that the
+By limiting the amount of times the access token can be used we ensure that the
 application token can only be retrieved once. After the application token is retrieved
 the access token becomes invalid and the cubbyhole is destroyed.
 
