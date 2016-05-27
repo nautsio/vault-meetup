@@ -543,9 +543,6 @@ Code: 403. Errors:
 # Advanced
 
 !SUB
-# SSH (Armin)
-
-!SUB
 # Github
 
 The GitHub auth backend can be used to authenticate with Vault using a GitHub personal access token. This method of authentication is most useful for humans: operators or developers using Vault directly via the CLI.
@@ -600,35 +597,24 @@ token_duration: 0
 token_policies: [root]
 ```
 
-Success. Next see what happens when you remove yourself from "owners" in GitHub. Also note you can change what policy to map to "owners", for example to default.
-
-```
-$ vault write auth/github/map/teams/owners value=default
-```
-
-When logging in you would be authenticated, yet have only the default policy.
-```
-$ vault auth -method=github token=$GITHUBTOKEN
-Successfully authenticated!
-token: 4736b7db-01dc-1969-6d2c-84919a7eefe8
-token_duration: 2591999
-token_policies: [default]
-$ vault auth -methods
-Error reading auth table: Error making API request.
-
-URL: GET http://127.0.0.1:8200/v1/sys/auth
-Code: 403. Errors:
-
-* permission denied
-```
+Success! Next experiment what happens when you remove yourself from the "owners" team. Or replace the root policy with the default policy.
 
 Restart your vault server to reset the authentication configuration.
+
+!SUB
+# SSH
+
+You made it this far, try to challenge yourself by making the SSH secret backend work!
+
+Follow the general documentation at: [/docs/secrets/ssh](https://www.vaultproject.io/docs/secrets/ssh/index.html)
+
+The method to use with SSH is the OTP solution which requires the [vault-ssh-helper](https://github.com/hashicorp/vault-ssh-helper)
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 <center>![HashiConf](img/hashiconf.png)</center>
 Want to hear **best practices** and the **latest news** about Vault and other HashiCorp products?
 
-TODO: CODE
+Use the special code **Hashi_Nauts** to get 20% discount!
 
 Come to **HashiConf EU the 13th-15th of June**!
