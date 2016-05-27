@@ -28,9 +28,9 @@
 
 !SLIDE
 # Vault
-Vault is a tool for **securely** accessing secrets. A **secret** is anything that 
-you want to tightly control access to, such as API keys, passwords, certificates, and more. 
-Vault provides a **unified interface** to any secret, while providing **tight access control** 
+Vault is a tool for **securely** accessing secrets. A **secret** is anything that
+you want to tightly control access to, such as API keys, passwords, certificates, and more.
+Vault provides a **unified interface** to any secret, while providing **tight access control**
 and recording a detailed **audit log**.
 
 !SUB
@@ -60,24 +60,24 @@ and recording a detailed **audit log**.
 
 !SUB
 # Storage Backend
-A storage backend is responsible for durable storage of encrypted data. Backends 
-are not trusted by Vault and are only expected to provide durability. The storage 
+A storage backend is responsible for durable storage of encrypted data. Backends
+are not trusted by Vault and are only expected to provide durability. The storage
 backend is configured when starting the Vault server.
 
 !SUB
 # Secret Backend
-A secret backend is responsible for managing secrets. Simple secret backends like 
-the "generic" backend simply return the same secret when queried. Some backends 
+A secret backend is responsible for managing secrets. Simple secret backends like
+the "generic" backend simply return the same secret when queried. Some backends
 support using policies to dynamically generate a secret each time they are queried.
 
 !SUB
 # Auth Backend
-Auth backends are the components in Vault that perform authentication and are 
+Auth backends are the components in Vault that perform authentication and are
 responsible for assigning identity and a set of policies to a user.
 
 !SUB
 # Audit Backend
-Audit backends are the components in Vault that keep a detailed log of all requests 
+Audit backends are the components in Vault that keep a detailed log of all requests
 and response to Vault.
 
 !SLIDE
@@ -87,7 +87,7 @@ and response to Vault.
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # The Setup
-Download the appropriate Vault binary for your platform and add it to your PATH 
+Download the appropriate Vault binary for your platform and add it to your PATH
 so that it can be accessed from anywhere:
 <br/>
 <br/>
@@ -99,8 +99,8 @@ so that it can be accessed from anywhere:
 
 !SUB
 # Start vault server
-We're going to start the Vault server in dev mode. The dev server is a built-in 
-flag to start a pre-configured server that is not very secure but useful for playing 
+We're going to start the Vault server in dev mode. The dev server is a built-in
+flag to start a pre-configured server that is not very secure but useful for playing
 with Vault locally.
 ```
 $ vault server -dev
@@ -109,14 +109,14 @@ $ vault server -dev
 ```
 With the dev server running, do the following three things:
 
-1. Copy the export VAULT_ADDR=... command from your terminal output and run it 
+1. Copy the export VAULT_ADDR=... command from your terminal output and run it
 in a **different** terminal window. This will configure the Vault client to talk to the dev server.
-2. Save the unseal key somewhere. 
-3. Do the same as step 2, but with the root token. 
+2. Save the unseal key somewhere.
+3. Do the same as step 2, but with the root token.
 
 !SUB
 # Check the Vault server
-Verify the server is running by running ```vault status```.  If it ran successfully, 
+Verify the server is running by running ```vault status```.  If it ran successfully,
 the output should look like below:
 
 ```
@@ -128,7 +128,7 @@ Unseal Progress: 0
 
 High-Availability Enabled: false
 ```
-If you see an error about opening a connection, make sure you copied and executed 
+If you see an error about opening a connection, make sure you copied and executed
 the export VAULT_ADDR=... command from above properly.
 
 !SLIDE
@@ -141,7 +141,7 @@ the export VAULT_ADDR=... command from above properly.
 ```
 $ vault write secret/hello value=world foo=bar
 ```
-This writes the pairs *value=world* and *foo=bar* to the path secret/hello. The secret/ 
+This writes the pairs *value=world* and *foo=bar* to the path secret/hello. The secret/
 prefix is where arbitrary secrets can be read and written.
 
 ```
@@ -175,7 +175,7 @@ itsasecret
 !SUB
 # Deleting secrets
 
-Now that we've learned how to read and write a secret, let's go ahead and delete 
+Now that we've learned how to read and write a secret, let's go ahead and delete
 it. We can do this with vault delete:
 
 ```
@@ -232,7 +232,7 @@ token_policies: [root]
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # Recap and next section
-# 
+#
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
@@ -249,7 +249,7 @@ $ vault mount postgresql
 Successfully mounted 'postgresql' at 'postgresql'!
 ```
 
-Also, let's launch a PostgreSQL server in the background: 
+Also, let's launch a PostgreSQL server in the background:
 ```
 $ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=shoehorse \
  -p "5432:5432" -d postgres
@@ -268,8 +268,7 @@ $ vault write postgresql/config/connection \
 Success! Data written to: postgresql/config/connection
 ```
 
-The next step is to configure a role. A role is a logical name that maps to a policy 
-used to generated those credentials. For example, lets create a "readonly" role:
+The next step is to create a postgres role by configuring it in vault. Vault added a "/roles" path for you to add multiple roles. Lets create a "readonly" role for our postgresql backend.
 
 ```
 $ vault write postgresql/roles/readonly \
@@ -292,7 +291,7 @@ lease_renewable	true
 password       	$PASSWORD
 username       	$USER
 ```
-The $USER and $PASSWORD will be generated dynamically by Vault. Lets try to connect 
+The $USER and $PASSWORD will be generated dynamically by Vault. Lets try to connect
 using an interactive container running `psql`:
 
 ```
