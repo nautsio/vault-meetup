@@ -540,7 +540,7 @@ Code: 403. Errors:
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-# Advanced
+# Recap and next section
 
 !SUB
 # Github
