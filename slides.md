@@ -163,7 +163,7 @@ lease_id        secret/password/76c844fb-aeba-a766-0a50-2b907072233a
 lease_duration  2592000
 value           itsasecret
 ```
-You can use the -format flag to get various different formats out from the command. 
+You can use the -format flag to get various different formats out from the command.
 Some formats are easier to use in different environments than others.
 
 You can also use the -field flag to extract an individual field from the secret data.
@@ -191,11 +191,11 @@ Success! Deleted 'secret/password'
 !SUB
 # Token Authentication
 
-Token authentication allows users to authenticate using a token, as well to create 
+Token authentication allows users to authenticate using a token, as well to create
 new tokens, revoke secrets by token, and more.
 
-When you start a dev server with **vault server -dev**, it outputs your root token. 
-The root token is the initial access token to configure Vault. It has root 
+When you start a dev server with **vault server -dev**, it outputs your root token.
+The root token is the initial access token to configure Vault. It has root
 privileges, so it can perform any operation within Vault.
 
 !SUB
@@ -217,7 +217,7 @@ all operations within Vault. Policies will be discussed in the next section.
 !SUB
 # Userpass Authentication
 Token authentication is great but if you want to allow users to connect without
-much effort then the "userpass" combination is a nice way. The "userpass" auth 
+much effort then the "userpass" combination is a nice way. The "userpass" auth
 backend allows users to authenticate with Vault using a username and password combination.
 
 To use it we need to enable it
@@ -257,7 +257,7 @@ token_policies: [root]
 
 !SUB
 # Policies
-Please read the (relatively short) [policy documentation](https://www.vaultproject.io/docs/concepts/policies.html) 
+Please read the (relatively short) [policy documentation](https://www.vaultproject.io/docs/concepts/policies.html)
 in order to fully understand Vault policies and succesfully complete the upcoming exercises.
 
 !SUB
@@ -272,7 +272,7 @@ path "secret/foo" {
   policy = "read"
 }
 ```
-This policy allows storage of new secrets under any path in the secrets backend, 
+This policy allows storage of new secrets under any path in the secrets backend,
 except for the "secret/foo" path.
 
 Store the policy in Vault with:
@@ -390,11 +390,23 @@ $ docker run -it --rm --link vault-meetup-postgres:postgres postgres \
 ```
 
 Enter the $PASSWORD to fully authenticate with PostgreSQL. In psql try **\du**
-to list the current users. Perhaps also try to tweak the lease time for new users:
-```
-$ vault write postgresql/config/lease lease=1h lease_max=24h
-```
+to list the current users.
 
+!SUB
+
+Vault enforces temporary credentials. In the case of PostgreSQL it is in the form of a **lease**.
+
+You can set two configuration keys called:
+
+**lease**: Vault will automatically revoke the credential. This forces the client to renew their credentials at least hourly.
+
+**lease_max**: This value is templated as "{{duration}}" in the role configuration. It ensures that if connectivity is lost between vault and the postgresql server, postgresql will always expire the credential.
+
+Set the lease to 1 minute, request a credential and see what happens when you login after a minute.
+
+```
+$ vault write postgresql/config/lease lease=1m lease_max=3m
+```
 
 !SUB
 # Transit secret backend
@@ -530,7 +542,9 @@ Code: 403. Errors:
 # SSH (Armin)
 
 !SUB
-# Github (Werner)
+# Github
+
+The GitHub auth backend can be used to authenticate with Vault using a GitHub personal access token. This method of authentication is most useful for humans: operators or developers using Vault directly via the CLI.
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
