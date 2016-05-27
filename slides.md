@@ -485,13 +485,14 @@ read, write, list, or for any other operation. When the token expires, its cubby
 doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
 
 !SUB
-Passing a token to an application that can ask for database access could be sniffed, to make 
-that more safe we can store the actual token in cubbyhole and then generate a new 
-token with limited access times that can retrieve that token. If the application 
-can retrieve the token all is fine and cubbyhole is gone, if it can't we know 
-something happened with the token and we need to act.
+One possible usage of the cubbyhole secret backend is passing a Vault token
+securely to an application. The actual application token can be stored in the
+cubbyhole backend and we can create a limited-use access token to reach the cubbyhole.
+We limit the amount of times the access token can be used to ensure that the
+application token can only be retrieved once. After the application token is retrieved
+the access token becomes invalid and the cubbyhole is destroyed.
 
-Let's create a token with limited use
+Let's create a token with limited use:
 ```
 $ vault token-create -use-limit=3
 
