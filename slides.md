@@ -82,6 +82,10 @@ and response to Vault.
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
+# Start Workshop
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
 # The Setup
 Download the appropriate Vault binary for your platform and add it to your PATH 
 so that it can be accessed from anywhere:
@@ -185,6 +189,10 @@ Success! Deleted 'secret/password'
 * token-create
 * policy maken
 
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
+# Authentication
+
 !SUB
 # Authentication: Username & Password
 Token authentication is great but if you want to allow users to connect without much effort then the "userpass" combination is a nice way. The "userpass" auth backend allows users to authenticate with Vault using a username and password combination.
@@ -223,20 +231,25 @@ token_policies: [root]
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
+# Recap and next section
+# 
+
+!SLIDE
+<!-- .slide: data-background="#6C1D5F" -->
 # Dynamic Secrets
 
 !SUB
 # PostgreSQL Secret backend
 The PostgreSQL backend is __dynamic__, meaning secrets are generated when they are accessed.
-Vault will connect to postgresql and create an user that will expire.
+Vault will connect to PostgreSQL and create an user that will expire.
 
-To use the postgresql secret backend we need to mount it:
+To use the PostgreSQL secret backend we need to mount it:
 ```
 $ vault mount postgresql
 Successfully mounted 'postgresql' at 'postgresql'!
 ```
 
-Also, lets launch the postgresql server in the background shall we?
+Also, let's launch a PostgreSQL server in the background: 
 ```
 $ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=shoehorse \
  -p "5432:5432" -d postgres
@@ -247,15 +260,16 @@ doc: [secrets/postgresql/](https://www.vaultproject.io/docs/secrets/postgresql/)
 
 !SUB
 
-Configure how vault would connect to postgresql (connecting string).
+Let's specify a connecting string so that Vault can connect to PostgresSQL.
 
 ```
 $ vault write postgresql/config/connection \
-    connection_url="postgresql://postgres:shoehorse@$(docker-machine ip):5432/postgres?sslmode=disable"
+    connection_url="postgresql://postgres:shoehorse@$D_IP:5432/postgres?sslmode=disable"
 Success! Data written to: postgresql/config/connection
 ```
 
-The next step is to configure a role. A role is a logical name that maps to a policy used to generated those credentials. For example, lets create a "readonly" role:
+The next step is to configure a role. A role is a logical name that maps to a policy 
+used to generated those credentials. For example, lets create a "readonly" role:
 
 ```
 $ vault write postgresql/roles/readonly \
@@ -267,7 +281,7 @@ Note: more complex GRANT queries can be used to further customize privileges of 
 
 !SUB
 
-Time to request some credentials.
+Let's request some PostgreSQL credentials.
 
 ```
 $ vault read postgresql/creds/readonly
@@ -275,18 +289,19 @@ Key            	Value
 lease_id       	postgresql/creds/readonly/f2682645-f8cd-dd93-8f3f-427b97707ea4
 lease_duration 	2592000
 lease_renewable	true
-password       	dfda962b-7015-390e-16f2-62b20a379142
-username       	root-9fc599d2-9bf5-063c-483d-89018ff17751
+password       	$PASSWORD
+username       	$USER
 ```
-Note: the lease and lease-max
-
-Lets try to connect using an interactive container running `psql`:
+The $USER and $PASSWORD will be generated dynamically by Vault. Lets try to connect 
+using an interactive container running `psql`:
 
 ```
 $ docker run -it --rm --link vault-meetup-postgres:postgres postgres \
-  psql -h postgres -U root-9fc599d2-9bf5-063c-483d-89018ff17751 -d postgres
+  psql -h postgres -U $USER -d postgres
 ```
-In psql try **\du** to list the current users. Perhaps also try to tweak the lease time for new users:
+
+Enter the $PASSWORD to fully authenticate with PostgreSQL. In psql try **\du**
+to list the current users. Perhaps also try to tweak the lease time for new users:
 ```
 $ vault write postgresql/config/lease lease=1h lease_max=24h
 ```
