@@ -550,6 +550,80 @@ Code: 403. Errors:
 
 The GitHub auth backend can be used to authenticate with Vault using a GitHub personal access token. This method of authentication is most useful for humans: operators or developers using Vault directly via the CLI.
 
+For this section you are required to have a [github account](https://www.github.com).
+
+!SUB
+
+Go to  [github.com/settings/organizations](https://github.com/settings/organizations) to create a new organization.
+
+1. Fill in the name as **vault-meetup-$YOURNAME**. Replace $YOURNAME with your name. Don't overthink the billing-email, what we are doing is completely free.
+
+2. And create a team called "owners" at  https://github.com/orgs/vault-meetup-$YOURNAME/new-team with yourself in it.
+
+3. Now generate a personal access token from Github with **read:org** access [here](https://github.com/settings/tokens). Keep this token safe, its the credential you will use to authenticate.
+
+
+
+!SUB
+
+Now to configure vault.
+
+Enable the github auth backend:
+```
+$ vault auth-enable github
+Successfully enabled 'github' at 'github'!
+```
+
+Configure the organization in the auth backend.
+
+```
+$ vault write auth/github/config organization=vault-meetup-$YOURNAME
+Success! Data written to: auth/github/config
+```
+
+Now we are making anyone in the "owners" team a root user in vault (not recommended).
+
+```
+$ vault write auth/github/map/teams/owners value=root
+Success! Data written to: auth/github/map/teams/owners
+```
+
+!SUB
+
+Try authenticating with vault using our new github backend and your personal github token.
+
+```
+$ vault auth -method=github token=$GITHUBTOKEN
+Successfully authenticated!
+token: 26684a1f-f284-e863-c418-6ae2c507bd5a
+token_duration: 0
+token_policies: [root]
+```
+
+Success. Next see what happens when you remove yourself from "owners" in GitHub. Also note you can change what policy to map to "owners", for example to default.
+
+```
+$ vault write auth/github/map/teams/owners value=default
+```
+
+When logging in you would be authenticated, yet have only the default policy.
+```
+$ vault auth -method=github token=$GITHUBTOKEN
+Successfully authenticated!
+token: 4736b7db-01dc-1969-6d2c-84919a7eefe8
+token_duration: 2591999
+token_policies: [default]
+$ vault auth -methods
+Error reading auth table: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/sys/auth
+Code: 403. Errors:
+
+* permission denied
+```
+
+Restart your vault server to reset the authentication configuration.
+
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 <center>![HashiConf](img/hashiconf.png)</center>
