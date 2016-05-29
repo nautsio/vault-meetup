@@ -321,10 +321,6 @@ Code: 400. Errors:
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
-# Recap and next section
-
-!SLIDE
-<!-- .slide: data-background="#6C1D5F" -->
 # Dynamic Secrets
 
 !SUB
@@ -538,10 +534,6 @@ Code: 403. Errors:
 * permission denied
 ```
 
-!SLIDE
-<!-- .slide: data-background="#6C1D5F" -->
-# Recap and next section
-
 !SUB
 # Github
 
@@ -558,8 +550,6 @@ Go to  [github.com/settings/organizations](https://github.com/settings/organizat
 2. And create a team called "owners" at  https://github.com/orgs/vault-meetup-$YOURNAME/new-team with yourself in it.
 
 3. Now generate a personal access token from Github with **read:org** access [here](https://github.com/settings/tokens). Keep this token safe, its the credential you will use to authenticate.
-
-
 
 !SUB
 
