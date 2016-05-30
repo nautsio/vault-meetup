@@ -84,6 +84,13 @@ and response to Vault.
 <!-- .slide: data-background="#6C1D5F" -->
 # Start Workshop
 
+* The presentation and workshop slides can be found at: [http://nauts.io/vault-meetup](http://nauts.io/vault-meetup)
+* Don't just copy-paste, really try to understand what is happening. Take this time
+to learn all you can about Vault, from this workshop but also the official docs.
+* Try to help each other, you'll learn a lot by helping others
+* If you have any questions or want to discuss Vault subjects just start the conversation.
+* Above all, have fun!
+
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # The Setup
@@ -98,7 +105,7 @@ so that it can be accessed from anywhere:
 </center>
 
 !SUB
-# Start vault server
+# Start Vault server
 We're going to start the Vault server in dev mode. The dev server is a built-in
 flag to start a pre-configured server that is not very secure but useful for playing
 with Vault locally.
@@ -183,6 +190,8 @@ $ vault delete secret/password
 Success! Deleted 'secret/password'
 ```
 
+doc: [auth/generic](https://www.vaultproject.io/docs/secrets/generic/index.html)
+
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # Authentication
@@ -196,6 +205,8 @@ new tokens, revoke secrets by token, and more.
 When you start a dev server with **vault server -dev**, it outputs your root token.
 The root token is the initial access token to configure Vault. It has root
 privileges, so it can perform any operation within Vault.
+
+doc: [auth/token](https://www.vaultproject.io/docs/auth/token.html)
 
 !SUB
 Let's create a new token:
@@ -225,6 +236,8 @@ $ vault auth-enable userpass
 Successfully enabled 'userpass' at 'userpass'!
 ```
 
+doc: [auth/userpass](https://www.vaultproject.io/docs/auth/userpass.html)
+
 !SUB
 We can see which auth backends are enabled:
 ```
@@ -249,7 +262,8 @@ token: a6e9151d-da97-a3c9-172c-ec3e62aa2d96
 token_duration: 0
 token_policies: [root]
 ```
-All information on the different auth backends can be found [here](https://www.vaultproject.io/docs/auth/index.html)
+
+doc: [auth](https://www.vaultproject.io/docs/auth/index.html)
 
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
@@ -319,6 +333,11 @@ Code: 400. Errors:
 * permission denied
 ```
 
+Authenticate again with the root token that you stored previously.
+
+**tip**: try to create at least one new policy to really familiarize yourself
+with the policies in Vault.
+
 !SLIDE
 <!-- .slide: data-background="#6C1D5F" -->
 # Dynamic Secrets
@@ -339,11 +358,14 @@ Also, let's launch a PostgreSQL server in the background:
 $ docker run --name vault-meetup-postgres -e POSTGRES_PASSWORD=pwd \
  -p "5432:5432" -d postgres
 ```
+This requires Docker to be installed. Please see the [installation guide](https://docs.docker.com/engine/installation/) 
+or ask one the workshop trainers to help you in case of problems.
 
 !SUB
 
 Let's specify a connecting string so that Vault can connect to PostgresSQL. The
-$IP variable in the connection string is the location of your Docker host.
+$IP variable in the connection string is the location of your Docker host (in case
+you are running on Windows or OSX).
 
 ```
 $ vault write postgresql/config/connection \
@@ -383,7 +405,7 @@ $ docker run -it --rm --link vault-meetup-postgres:postgres postgres \
 ```
 
 Enter the $PASSWORD to fully authenticate with PostgreSQL. In psql try **\du**
-to list the current users.
+to list the current users (exit the console with **\q**).
 
 !SUB
 
@@ -391,13 +413,15 @@ Vault only deals with temporary credentials. With the PostgreSQL backend, you ca
 
 **lease**: Vault will automatically revoke the credential after the configured time has elapsed. This forces the client to renew their credentials regularly.
 
-**lease_max**: This value is templated as "{{duration}}" in the role configuration. It ensures that if vault is unable to revoke the credential after the lease time, postgresql will always expire the credential on its own.
+**lease_max**: This value is templated as "{{expiration}}" in the role configuration. It ensures that if Vault is unable to revoke the credential after the lease time, postgresql will always expire the credential on its own.
 
 Set the lease to 1 minute, request a credential and see what happens when you login after a minute.
 
 ```
 $ vault write postgresql/config/lease lease=1m lease_max=3m
 ```
+ 
+doc: [secrets/postgresql](https://www.vaultproject.io/docs/secrets/postgresql/index.html)
 
 !SUB
 # Transit secret backend
@@ -410,7 +434,7 @@ $ vault mount transit
 Successfully mounted 'transit' at 'transit'!
 ```
 
-doc: [secrets/transit/index.html](https://www.vaultproject.io/docs/secrets/transit/index.html)
+doc: [secrets/transit](https://www.vaultproject.io/docs/secrets/transit/index.html)
 
 !SUB
 After mounting the transit secret backend we need to create a "named encryption key" that can be referenced and used by other applications with independent keys.
@@ -488,7 +512,7 @@ are accessible to **any token** with read privileges on that path. In cubbyhole,
 are scoped **per token**; no token can access another token's cubbyhole, whether to
 read, write, list, or for any other operation. When the token expires, its cubbyhole is destroyed.
 
-doc: [secrets/cubbyhole/index.html](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
+doc: [secrets/cubbyhole](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html)
 
 !SUB
 One possible usage of the cubbyhole secret backend is passing a Vault token
@@ -537,19 +561,24 @@ Code: 403. Errors:
 !SUB
 # Github
 
-The GitHub auth backend can be used to authenticate with Vault using a GitHub personal access token. This method of authentication is most useful for humans: operators or developers using Vault directly via the CLI.
+The GitHub auth backend can be used to authenticate with Vault using a GitHub 
+personal access token. This method of authentication is most useful for humans: 
+operators or developers using Vault directly via the CLI.
 
 For this section you are required to have a [github account](https://www.github.com).
+
+doc: [auth/github](https://www.vaultproject.io/docs/auth/github.html)
 
 !SUB
 
 Go to  [github.com/settings/organizations](https://github.com/settings/organizations) to create a new organization.
 
-1. Fill in the name as **vault-meetup-$YOURNAME**. Replace $YOURNAME with your name. Don't overthink the billing-email, what we are doing is completely free.
-
-2. And create a team called "owners" at  https://github.com/orgs/vault-meetup-$YOURNAME/new-team with yourself in it.
-
-3. Now generate a personal access token from Github with **read:org** access [here](https://github.com/settings/tokens). Keep this token safe, its the credential you will use to authenticate.
+1. Fill in the name as **vault-meetup-$YOURNAME**. Replace $YOURNAME with your name. 
+§Don't overthink the billing-email, what we are doing is completely free.
+2. And create a team called "owners" at  https://github.com/orgs/vault-meetup-$YOURNAME/new-team 
+with yourself in it.
+3. Now generate a personal access token from Github with **read:org** access [here](https://github.com/settings/tokens). 
+Keep this token safe, its the credential you will use to authenticate.
 
 !SUB
 
@@ -577,7 +606,7 @@ Success! Data written to: auth/github/map/teams/owners
 
 !SUB
 
-Try authenticating with vault using our new github backend and your personal github token.
+Try authenticating with Vault using our new github backend and your personal github token.
 
 ```
 $ vault auth -method=github token=$GITHUBTOKEN
@@ -589,14 +618,14 @@ token_policies: [root]
 
 Success! Next experiment what happens when you remove yourself from the "owners" team. Or replace the root policy with the default policy.
 
-Restart your vault server to reset the authentication configuration.
+Restart your Vault server to reset the authentication configuration.
 
 !SUB
 # SSH
 
 You made it this far, try to challenge yourself by making the SSH secret backend work!
 
-Follow the general documentation at: [/docs/secrets/ssh](https://www.vaultproject.io/docs/secrets/ssh/index.html)
+Follow the general documentation at: [secrets/ssh](https://www.vaultproject.io/docs/secrets/ssh/index.html)
 
 The method to use with SSH is the OTP solution which requires the [vault-ssh-helper](https://github.com/hashicorp/vault-ssh-helper)
 
