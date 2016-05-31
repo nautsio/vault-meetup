@@ -445,7 +445,7 @@ Success! Data written to: transit/keys/meetup
 
 What have we created
 ```
-$ vault read transit/keys/vault-meetup
+$ vault read transit/keys/meetup
 Key                     Value
 cipher_mode             aes-gcm
 deletion_allowed        false
@@ -453,7 +453,7 @@ derived                 false
 keys                    map[1:1.463208292e+09]
 latest_version          1
 min_decryption_version  1
-name                    vault-meetup
+name                    meetup
 ```
 
 !SUB
